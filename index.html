@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Financeiro · PS Gestão & Negócios</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;1,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#F2F0ED; --surface:#FFFFFF; --surf2:#ECEAE6; --surf3:#E4E1DC;
+  --border:#DDD9D3; --text:#1C1917; --soft:#78726A; --xsoft:#ADA69E;
+  --dd:#A8294A; --dd-bg:#FCEEF2; --dd-mid:#F2C5D0;
+  --ptl:#1B4F8A; --ptl-bg:#EAF0FA; --ptl-mid:#B8D0EE;
+  --emb:#5C3D1E; --emb-bg:#F3EDE6; --emb-mid:#D4B99A;
+  --pos:#2C4A3E; --pos-bg:#EBF0EE; --pos-mid:#8DB8A8;
+  --neg:#7A2020; --neg-bg:#F5EBEB; --neg-mid:#D49090;
+  --warn:#6B4E00; --warn-bg:#FBF5E6; --warn-mid:#D4B050;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
+
+/* CONFIG */
+#cfg{position:fixed;inset:0;background:rgba(28,25,23,.93);z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.cfg-box{background:var(--surface);border-radius:14px;padding:36px;max-width:480px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.3);}
+.cfg-box h2{font-family:'Fraunces',serif;font-size:24px;font-weight:300;margin-bottom:6px;}
+.cfg-sub{font-size:12px;color:var(--soft);line-height:1.7;margin-bottom:22px;}
+.cfg-steps{background:var(--surf2);border-radius:8px;padding:14px 16px;margin-bottom:20px;}
+.cfg-step{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;}
+.cfg-step:last-child{margin-bottom:0;}
+.snum{width:20px;height:20px;border-radius:50%;background:var(--text);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.stxt{font-size:12px;color:var(--soft);line-height:1.6;}
+.stxt strong{color:var(--text);}
+.stxt code{background:var(--surf3);padding:1px 5px;border-radius:3px;font-size:11px;font-family:monospace;}
+label{font-size:11px;font-weight:600;color:var(--soft);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px;}
+input{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--bg);outline:none;margin-bottom:14px;transition:border-color .15s;}
+input:focus{border-color:var(--ptl);}
+input::placeholder{color:var(--xsoft);}
+.btn-p{width:100%;padding:13px;background:var(--text);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;letter-spacing:.01em;}
+.btn-p:hover{opacity:.85;}
+.btn-d{width:100%;padding:10px;background:transparent;color:var(--soft);border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .15s;margin-top:8px;}
+.btn-d:hover{border-color:var(--text);color:var(--text);}
+.cfg-err{font-size:12px;color:var(--neg);background:var(--neg-bg);border-radius:6px;padding:8px 12px;margin-top:6px;display:none;}
+
+/* LOADING */
+#ldr{position:fixed;inset:0;background:var(--bg);z-index:1999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+.spin{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .55s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#ldr-msg{font-size:12px;color:var(--soft);}
+
+/* HEADER */
+.hdr{background:var(--text);padding:18px 36px;display:flex;justify-content:space-between;align-items:center;gap:20px;position:sticky;top:0;z-index:100;}
+.hdr-brand h1{font-family:'Fraunces',serif;font-size:16px;color:#fff;font-weight:300;letter-spacing:.01em;}
+.hdr-brand p{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;text-transform:uppercase;letter-spacing:.1em;}
+.hdr-right{display:flex;align-items:center;gap:20px;}
+.hkpi{text-align:right;}
+.hkpi-l{font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.1em;}
+.hkpi-v{font-family:'Fraunces',serif;font-size:18px;color:#fff;font-weight:300;margin-top:1px;}
+.hkpi-v.neg{color:#EAA0A0;}
+.hkpi-v.warn{color:#F0CE7A;}
+.btn-ref{padding:7px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:6px;color:rgba(255,255,255,.6);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;display:flex;align-items:center;gap:5px;}
+.btn-ref:hover{background:rgba(255,255,255,.15);color:#fff;}
+.spin-i{display:inline-block;}
+.refreshing .spin-i{animation:spin .55s linear infinite;}
+#upd{font-size:9px;color:rgba(255,255,255,.25);text-align:right;margin-top:2px;}
+
+/* TABS NAV */
+.tabs-nav{background:var(--surf2);border-bottom:1px solid var(--border);padding:0 36px;display:flex;gap:0;}
+.tab-btn{padding:10px 16px;font-size:12px;font-weight:500;color:var(--soft);cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px;transition:all .15s;user-select:none;white-space:nowrap;}
+.tab-btn .dot{width:6px;height:6px;border-radius:50%;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--text);border-bottom-color:var(--text);}
+.tab-btn[data-t="dd"] .dot{background:var(--dd);}
+.tab-btn[data-t="ptl"] .dot{background:var(--ptl);}
+.tab-btn[data-t="emb"] .dot{background:var(--emb);}
+.tab-btn[data-t="geral"] .dot{background:var(--soft);}
+
+/* MÊS SELECTOR */
+.mes-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 36px;display:flex;align-items:center;gap:6px;overflow-x:auto;}
+.mes-btn{padding:5px 12px;font-size:11px;font-weight:500;border:1.5px solid var(--border);border-radius:20px;background:transparent;color:var(--soft);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;}
+.mes-btn:hover{border-color:var(--text);color:var(--text);}
+.mes-btn.active{background:var(--text);border-color:var(--text);color:#fff;}
+.mes-btn.tem-dados{border-color:var(--pos-mid);color:var(--pos);}
+.mes-btn.tem-dados.active{background:var(--pos);border-color:var(--pos);color:#fff;}
+.mes-btn.vermelho{border-color:var(--neg-mid);color:var(--neg);}
+.mes-btn.vermelho.active{background:var(--neg);border-color:var(--neg);color:#fff;}
+
+/* MAIN */
+.main{padding:24px 36px;display:flex;flex-direction:column;gap:18px;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;}
+.card-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.12em;color:var(--xsoft);margin-bottom:8px;font-weight:500;}
+.big{font-family:'Fraunces',serif;font-size:26px;font-weight:300;line-height:1;}
+.big.pos{color:var(--pos);} .big.neg{color:var(--neg);} .big.warn{color:var(--warn);}
+.big.dd{color:var(--dd);} .big.ptl{color:var(--ptl);} .big.emb{color:var(--emb);}
+.csub{font-size:11px;color:var(--soft);margin-top:5px;}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:3px 8px;border-radius:20px;font-weight:500;margin-top:7px;}
+.badge.pos{background:var(--pos-bg);color:var(--pos);}
+.badge.neg{background:var(--neg-bg);color:var(--neg);}
+.badge.warn{background:var(--warn-bg);color:var(--warn);}
+.badge.neu{background:var(--surf2);color:var(--soft);}
+.badge.dd{background:var(--dd-bg);color:var(--dd);}
+
+/* ROW */
+.row{display:flex;gap:18px;}
+.row .card{flex:1;}
+.row .card.w2{flex:2;}
+.row .card.w3{flex:3;}
+
+/* SECTION TITLE */
+.stitle{font-family:'Fraunces',serif;font-size:12px;font-style:italic;color:var(--soft);padding-bottom:8px;border-bottom:1px solid var(--border);}
+
+/* ALERTA BANNER */
+.alert-banner{border-radius:10px;padding:14px 18px;display:flex;align-items:flex-start;gap:12px;border:1px solid;}
+.alert-banner.neg{background:var(--neg-bg);border-color:var(--neg-mid);}
+.alert-banner.warn{background:var(--warn-bg);border-color:var(--warn-mid);}
+.alert-banner.pos{background:var(--pos-bg);border-color:var(--pos-mid);}
+.ab-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.ab-title{font-size:13px;font-weight:600;margin-bottom:3px;}
+.ab-text{font-size:12px;color:var(--soft);line-height:1.6;}
+.ab-text strong{color:var(--text);}
+
+/* DRE TABLE */
+.dre{width:100%;border-collapse:collapse;}
+.dre th{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--xsoft);padding:6px 10px;border-bottom:2px solid var(--border);text-align:right;font-weight:500;}
+.dre th:first-child{text-align:left;}
+.dre td{padding:9px 10px;border-bottom:1px solid var(--border);text-align:right;font-size:12px;}
+.dre td:first-child{text-align:left;color:var(--soft);}
+.dre tr:last-child td{border-bottom:none;}
+.dre tr.section-row td{background:var(--surf2);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--soft);font-weight:600;padding:6px 10px;}
+.dre tr.section-row td:first-child{border-radius:4px 0 0 4px;}
+.dre tr.section-row td:last-child{border-radius:0 4px 4px 0;}
+.dre tr.total-row td{font-weight:700;font-size:13px;background:var(--text);color:#fff;border-bottom:none;}
+.dre tr.total-row td:first-child{border-radius:4px 0 0 4px;color:rgba(255,255,255,.7);}
+.dre tr.subtotal-row td{font-weight:600;background:var(--surf2);}
+.dre tr.result-row td{font-weight:700;font-size:14px;}
+.dre tr.result-row.pos td{background:var(--pos-bg);}
+.dre tr.result-row.pos td:first-child{color:var(--pos);}
+.dre tr.result-row.neg td{background:var(--neg-bg);}
+.dre tr.result-row.neg td:first-child{color:var(--neg);}
+.dre tr.caixa-row td{background:#EAF0FA;font-weight:600;}
+.dre tr.caixa-row td:first-child{color:var(--ptl);}
+.pos-val{color:var(--pos);font-weight:500;}
+.neg-val{color:var(--neg);font-weight:500;}
+.zero-val{color:var(--xsoft);}
+.indent{padding-left:24px!important;}
+
+/* GRÁFICO */
+.chart-wrap{display:flex;align-items:flex-end;gap:4px;height:80px;position:relative;margin-top:14px;}
+.c-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end;cursor:default;position:relative;}
+.c-bar{width:100%;border-radius:2px 2px 0 0;min-height:2px;transition:opacity .15s;}
+.c-col:hover .c-bar{opacity:.7;}
+.c-lbl{font-size:8px;color:var(--xsoft);text-transform:uppercase;}
+.c-lbl.now{color:var(--text);font-weight:700;}
+.c-lbl.active-m{color:var(--ptl);font-weight:700;}
+.meta-ln{position:absolute;left:0;right:0;border-top:1px dashed var(--xsoft);pointer-events:none;}
+.meta-tg{position:absolute;right:0;font-size:8px;color:var(--xsoft);transform:translateY(-110%);}
+
+/* TOOLTIP */
+.tt{position:relative;}
+.tt-tip{position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:10px;padding:4px 8px;border-radius:5px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:50;}
+.tt:hover .tt-tip{opacity:1;}
+
+/* EXPEDIÇÕES */
+.exp-tbl{width:100%;border-collapse:collapse;}
+.exp-tbl th{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--xsoft);padding:6px 8px;border-bottom:2px solid var(--border);font-weight:500;}
+.exp-tbl th.r{text-align:right;}
+.exp-tbl th.c{text-align:center;}
+.exp-tbl td{padding:10px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.exp-tbl tr:last-child td{border-bottom:none;}
+.exp-tbl tr.hl{background:var(--dd-bg);}
+.exp-nome{font-weight:500;font-size:12px;}
+.exp-sub{font-size:10px;color:var(--soft);margin-top:1px;}
+.prog-bg{height:4px;background:var(--surf2);border-radius:2px;overflow:hidden;margin-bottom:3px;width:70px;}
+.prog-f{height:100%;border-radius:2px;transition:width .5s ease;}
+.prog-t{font-size:10px;color:var(--xsoft);}
+.ev{text-align:right;font-size:12px;font-weight:500;}
+.ev small{display:block;font-size:10px;font-weight:400;color:var(--soft);}
+.sbadge{display:inline-block;font-size:10px;padding:3px 8px;border-radius:20px;font-weight:500;}
+
+/* NEGÓCIO ROW */
+.neg-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:10px;}
+.neg-row:last-child{border-bottom:none;}
+.neg-nm{font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px;}
+.neg-ds{font-size:10px;color:var(--soft);margin-top:2px;}
+.neg-pb{width:70px;}
+.neg-pbg{height:3px;background:var(--surf2);border-radius:2px;overflow:hidden;margin-bottom:2px;}
+.neg-pf{height:100%;border-radius:2px;}
+.neg-pp{font-size:9px;color:var(--xsoft);text-align:right;}
+.neg-vl{font-size:13px;font-weight:600;text-align:right;white-space:nowrap;min-width:80px;}
+
+/* INSIGHT */
+.ins-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.ins-item:last-child{border-bottom:none;}
+.ins-bar{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0;}
+.ins-tag{font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:3px;}
+.ins-txt{font-size:12px;color:var(--soft);line-height:1.55;}
+.ins-txt strong{color:var(--text);}
+
+/* POTENCIAL */
+.pot-card{background:var(--text);border-color:var(--text);}
+.pot-card .card-lbl{color:rgba(255,255,255,.35);}
+.pot-card .big{color:#fff;}
+.pot-card .csub{color:rgba(255,255,255,.4);}
+.pot-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:12px;}
+.pot-row:last-child{border-bottom:none;}
+.pot-l{color:rgba(255,255,255,.45);}
+.pot-v{color:#fff;font-weight:500;}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.kpi-mini{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;}
+.kpi-mini .km-l{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--xsoft);margin-bottom:6px;}
+.kpi-mini .km-v{font-family:'Fraunces',serif;font-size:22px;font-weight:300;}
+.kpi-mini .km-s{font-size:10px;color:var(--soft);margin-top:4px;}
+
+/* SEMÁFORO */
+.semaforo{display:flex;gap:6px;align-items:center;margin-top:8px;}
+.sema-dot{width:10px;height:10px;border-radius:50%;}
+.sema-txt{font-size:11px;color:var(--soft);}
+
+/* ANIM */
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.anim{animation:fadeUp .3s ease both;}
+.d1{animation-delay:.04s}.d2{animation-delay:.08s}.d3{animation-delay:.12s}.d4{animation-delay:.16s}.d5{animation-delay:.2s}.d6{animation-delay:.24s}
+
+/* RECONFIG */
+.recfg{position:fixed;bottom:18px;right:18px;background:var(--surf2);border:1px solid var(--border);border-radius:8px;padding:7px 13px;font-size:11px;color:var(--soft);cursor:pointer;transition:all .15s;z-index:200;font-family:'DM Sans',sans-serif;}
+.recfg:hover{background:var(--surface);color:var(--text);}
+
+/* SCROLL */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--surf2);}
+::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- CONFIG -->
+<div id="cfg">
+  <div class="cfg-box">
+    <h2>Conectar à planilha</h2>
+    <p class="cfg-sub">Sem API Key. Só precisa que a planilha esteja pública. Feito uma vez, fica salvo.</p>
+    <div class="cfg-steps">
+      <div class="cfg-step"><div class="snum">1</div><div class="stxt">No Google Sheets: <strong>Compartilhar → Qualquer pessoa com o link → Leitor</strong></div></div>
+      <div class="cfg-step"><div class="snum">2</div><div class="stxt">Cole o <strong>ID da planilha</strong> (trecho entre <code>/d/</code> e <code>/edit</code> da URL)</div></div>
+      <div class="cfg-step"><div class="snum">3</div><div class="stxt">Clique em Conectar. Pronto — sem mais configurações.</div></div>
+    </div>
+    <label>ID da Planilha</label>
+    <input type="text" id="inp-id" placeholder="1hoBLtKJlN3MtY5DB8zgTdDgS_wlPliXSTySWf7AvteA">
+    <div class="cfg-err" id="cfg-err"></div>
+    <button class="btn-p" onclick="conectar()">Conectar →</button>
+    <button class="btn-d" onclick="usarDemo()">Ver demonstração com seus dados</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="ldr"><div class="spin"></div><p id="ldr-msg">Carregando...</p></div>
+
+<!-- PAINEL -->
+<div id="painel" style="display:none">
+
+  <div class="hdr">
+    <div class="hdr-brand">
+      <h1>PS Gestão & Negócios · Painel 2026</h1>
+      <p id="hdr-sub">Destinos Delas · Paty Te Leva · Embarque+</p>
+    </div>
+    <div class="hdr-right">
+      <div class="hkpi"><div class="hkpi-l">Receita acum.</div><div class="hkpi-v" id="hk-rec">—</div></div>
+      <div class="hkpi"><div class="hkpi-l">Resultado</div><div class="hkpi-v neg" id="hk-res">—</div></div>
+      <div class="hkpi"><div class="hkpi-l">Caixa</div><div class="hkpi-v" id="hk-cx">—</div></div>
+      <div class="hkpi"><div class="hkpi-l">Cap. giro</div><div class="hkpi-v warn" id="hk-cg">—</div></div>
+      <div>
+        <button class="btn-ref" id="btn-ref" onclick="atualizar()"><span class="spin-i">↻</span> Atualizar</button>
+        <div id="upd"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABAS NEGÓCIO -->
+  <div class="tabs-nav">
+    <div class="tab-btn active" data-t="geral"><span class="dot"></span>Visão Geral</div>
+    <div class="tab-btn" data-t="dd"><span class="dot"></span>Destinos Delas</div>
+    <div class="tab-btn" data-t="ptl"><span class="dot"></span>Paty Te Leva</div>
+    <div class="tab-btn" data-t="emb"><span class="dot"></span>Embarque+</div>
+  </div>
+
+  <!-- FILTRO MÊS -->
+  <div class="mes-bar" id="mes-bar">
+    <span style="font-size:10px;color:var(--xsoft);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;margin-right:4px">Mês:</span>
+  </div>
+
+  <div class="main" id="main"></div>
+</div>
+
+<button class="recfg" id="recfg" style="display:none" onclick="reconfigurar()">⚙️ Reconectar</button>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════════════════════════
+let SHEET_ID = '';
+let D = null; // dados completos
+let ABA_ATIVA = 'geral';
+let MES_ATIVO = -1; // -1 = todos
+
+const MESES_AB   = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+// ══════════════════════════════════════════════════════════════════
+// FORMATO
+// ══════════════════════════════════════════════════════════════════
+const brl = (n, z='—') => {
+  if (n === null || n === undefined || (n === 0 && z === '—')) return z;
+  if (n === 0) return 'R$ -';
+  const s = 'R$\u00a0' + Math.abs(n).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
+  return n < 0 ? `(${s})` : s;
+};
+const brl0 = n => brl(n, 'R$ -');
+const pct  = (n, z='—') => (!n && n!==0) ? z : (n*100).toFixed(1)+'%';
+const valCls = n => n > 0 ? 'pos-val' : n < 0 ? 'neg-val' : 'zero-val';
+const now = () => new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
+// ══════════════════════════════════════════════════════════════════
+// PARSE CSV
+// ══════════════════════════════════════════════════════════════════
+function parseCSV(txt) {
+  return txt.split('\n').map(line => {
+    const cols = []; let cur = '', inQ = false;
+    for (const c of line) {
+      if (c==='"'){inQ=!inQ;continue;}
+      if (c===','&&!inQ){cols.push(cur.trim());cur='';continue;}
+      cur+=c;
+    }
+    cols.push(cur.trim());
+    return cols;
+  });
+}
+function num(s) {
+  if (!s) return 0;
+  const n = parseFloat(String(s).replace(/[R$\s.%]/g,'').replace(',','.'));
+  return isNaN(n)?0:n;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// BUSCAR DADOS
+// ══════════════════════════════════════════════════════════════════
+async function fetchSheet(sheetName) {
+  const enc = encodeURIComponent(sheetName);
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${enc}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Aba "${sheetName}" não encontrada (${r.status})`);
+  return parseCSV(await r.text());
+}
+
+async function carregarTudo() {
+  setMsg('Carregando 🔢 DADOS...');
+  const dados = await fetchSheet('🔢 DADOS');
+  setMsg('Carregando 🌎 EXPEDIÇÕES...');
+  const exps  = await fetchSheet('🌎 EXPEDIÇÕES');
+  setMsg('Carregando 📥 LANÇAMENTOS...');
+  const lanc  = await fetchSheet('📥 LANÇAMENTOS');
+
+  D = processar(dados, exps, lanc);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PROCESSAR
+// ══════════════════════════════════════════════════════════════════
+function processar(dados_r, exp_r, lanc_r) {
+  // ── DADOS (aba 🔢 DADOS) ──────────────────────────────────────
+  // Linhas: 3=seção, 4=DD, 5=PTL, 6=EMB-assin, 7=EMB-com, 8=total-rec
+  // 9=seção, 10=repasse, 11=brindes, 12=despviagem, 13=outras, 14=custosfixos, 15=total-saidas
+  // 16=seção, 17=resultado, 18=acumulado, 19=margem
+  // 20=seção, 21=meta, 22=%meta, 23=caixa
+  const get = (ri, ci=null) => {
+    const row = dados_r[ri] || [];
+    if (ci !== null) return num(row[ci]);
+    return row;
+  };
+  const getMeses = ri => Array.from({length:12},(_,i)=>get(ri,i+1));
+  const getTotal = ri => get(ri,13);
+
+  const rec_mes   = getMeses(7);
+  const saida_mes = getMeses(14);
+  const res_mes   = getMeses(16);
+  const acum_mes  = getMeses(17);
+  const caixa_mes = getMeses(22);
+  const meta_mes  = getMeses(20);
+
+  // Saídas detalhadas
+  const repasse_mes  = getMeses(9);
+  const brindes_mes  = getMeses(10);
+  const despvg_mes   = getMeses(11);
+  const outras_mes   = getMeses(12);
+  const cfixos_mes   = getMeses(13);
+
+  // Receitas por negócio
+  const dd_mes  = getMeses(3);
+  const ptl_mes = getMeses(4);
+  const emb_asn_mes = getMeses(5);
+  const emb_com_mes = getMeses(6);
+  const emb_mes = emb_asn_mes.map((v,i)=>v+(emb_com_mes[i]||0));
+
+  // Totais anuais
+  const rec_total   = getTotal(7);
+  const dd_total    = getTotal(3);
+  const ptl_total   = getTotal(4);
+  const emb_total   = getTotal(5)+getTotal(6);
+  const saida_total = getTotal(14);
+  const res_total   = getTotal(16);
+
+  // Caixa atual = último mês com valor
+  const caixa_atual = [...caixa_mes].reverse().find(v=>v!==0) || 0;
+  const res_acum    = [...acum_mes].reverse().find(v=>v!==0) || 0;
+  const meta_atual  = meta_mes[2] || 16700;
+
+  // Capital de giro = custos fixos próx 3 meses
+  const cfixo_mensal = cfixos_mes.find(v=>v>0) || 2320;
+  const cap_giro = cfixo_mensal * 3;
+
+  // ── EXPEDIÇÕES ───────────────────────────────────────────────
+  const expedicoes = exp_r.slice(1).filter(r=>r[0]&&r[0].trim()!='').map(r=>({
+    nome:r[0]||'', mes:r[1]||'',
+    vt:num(r[2]), vv:num(r[3]), ticket:num(r[4]),
+    previsto:num(r[5]), vendido:num(r[6]),
+    custo:num(r[7]), margem:num(r[8]),
+    status:r[9]||''
+  }));
+
+  // ── LANÇAMENTOS — custos variáveis por mês ───────────────────
+  const cv_mes = Array(12).fill(0);
+  const ci_mes = Array(12).fill(0); // investimentos
+  for (let i=4; i<lanc_r.length; i++) {
+    const row = lanc_r[i];
+    if (!row || !row[2]) continue;
+    const tipo = (row[2]||'').toLowerCase();
+    const cat  = (row[3]||'').toLowerCase();
+    const val  = num(row[5]);
+    const mes  = (row[7]||'').toLowerCase();
+    const mi   = MESES_FULL.findIndex(m=>m.toLowerCase()===mes);
+    if (mi < 0 || tipo !== 'saída') continue;
+    if (cat.includes('cartão') || cat.includes('variav')) cv_mes[mi] += val;
+    if (cat.includes('investiment') || cat.includes('treinament')) ci_mes[mi] += val;
+  }
+
+  // ── ALERTAS ──────────────────────────────────────────────────
+  const alertas = [];
+  const mes_atual_idx = new Date().getMonth();
+
+  // Vermelho no mês
+  for (let i=0; i<=mes_atual_idx; i++) {
+    if (res_mes[i] < 0) {
+      alertas.push({
+        tipo: 'neg', icon: '🔴',
+        titulo: `${MESES_FULL[i]} no vermelho`,
+        texto: `Resultado de <strong>${brl(res_mes[i])}</strong>. Saídas superaram receitas em ${brl(Math.abs(res_mes[i]))}.`
+      });
+    }
+  }
+  // Caixa baixo
+  if (caixa_atual < cap_giro) {
+    alertas.push({
+      tipo: 'warn', icon: '⚠️',
+      titulo: 'Caixa abaixo do capital de giro',
+      texto: `Caixa de <strong>${brl(caixa_atual)}</strong> está abaixo do capital de giro recomendado de <strong>${brl(cap_giro)}</strong> (3 meses de custos fixos).`
+    });
+  }
+  // Meta
+  if (meta_mes[mes_atual_idx] > 0 && rec_mes[mes_atual_idx] < meta_mes[mes_atual_idx]*0.5) {
+    alertas.push({
+      tipo: 'warn', icon: '📊',
+      titulo: `Meta de ${MESES_FULL[mes_atual_idx]} em risco`,
+      texto: `Apenas <strong>${pct(rec_mes[mes_atual_idx]/meta_mes[mes_atual_idx])}</strong> da meta atingida. Faltam <strong>${brl(meta_mes[mes_atual_idx]-rec_mes[mes_atual_idx])}</strong>.`
+    });
+  }
+  // EuroTrip sem venda
+  const euro = expedicoes.find(e=>e.nome.includes('Euro'));
+  if (euro && euro.vv === 0) {
+    alertas.push({
+      tipo: 'warn', icon: '⭐',
+      titulo: 'EuroTrip sem vendas',
+      texto: `A maior expedição do ano (R$343k potencial) ainda não tem nenhuma vaga vendida. É o foco principal de março.`
+    });
+  }
+
+  return {
+    rec_mes, saida_mes, res_mes, acum_mes, caixa_mes, meta_mes,
+    repasse_mes, brindes_mes, despvg_mes, outras_mes, cfixos_mes, cv_mes, ci_mes,
+    dd_mes, ptl_mes, emb_asn_mes, emb_com_mes, emb_mes,
+    rec_total, dd_total, ptl_total, emb_total, saida_total, res_total,
+    caixa_atual, res_acum, meta_atual, cfixo_mensal, cap_giro,
+    pct_meta: meta_mes.map((m,i)=>m>0?rec_mes[i]/m:0),
+    margem_mes: getMeses(18),
+    expedicoes, alertas,
+    custos_fixos_detalhe: [
+      {n:'Imposto (até jun)', v:1000},
+      {n:'Telefone & internet', v:350},
+      {n:'Empréstimo', v:505},
+      {n:'Contabilidade', v:200},
+      {n:'Ferramentas', v:190},
+      {n:'Endereço fiscal', v:75},
+    ]
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CONECTAR / DEMO
+// ══════════════════════════════════════════════════════════════════
+async function conectar() {
+  const id = document.getElementById('inp-id').value.trim();
+  const err = document.getElementById('cfg-err');
+  if (!id) { showErr('Cole o ID da planilha.'); return; }
+  SHEET_ID = id; err.style.display='none';
+  document.getElementById('cfg').style.display='none';
+  showLdr('Conectando à planilha...');
+  try {
+    await carregarTudo();
+    localStorage.setItem('psgestao_sid', SHEET_ID);
+    renderTudo();
+  } catch(e) {
+    hideLdr();
+    document.getElementById('cfg').style.display='flex';
+    showErr('Erro: '+e.message+'. Verifique se a planilha está pública e o ID correto.');
+  }
+}
+
+function usarDemo() {
+  document.getElementById('cfg').style.display='none';
+  showLdr('Carregando demonstração...');
+  D = gerarDemo();
+  document.getElementById('hdr-sub').textContent='Destinos Delas · Paty Te Leva · Embarque+ · DEMONSTRAÇÃO';
+  setTimeout(renderTudo, 400);
+}
+
+async function atualizar() {
+  if (!SHEET_ID) { D=gerarDemo(); renderTudo(); return; }
+  document.getElementById('btn-ref').classList.add('refreshing');
+  try { await carregarTudo(); renderTudo(); }
+  catch(e){ alert('Erro ao atualizar: '+e.message); }
+  finally { document.getElementById('btn-ref').classList.remove('refreshing'); }
+}
+
+function reconfigurar() {
+  document.getElementById('painel').style.display='none';
+  document.getElementById('recfg').style.display='none';
+  document.getElementById('cfg').style.display='flex';
+}
+
+function showErr(msg){ const el=document.getElementById('cfg-err'); el.innerHTML='⚠️ '+msg; el.style.display='block'; }
+function showLdr(msg){ document.getElementById('ldr-msg').textContent=msg||'Carregando...'; document.getElementById('ldr').style.display='flex'; }
+function hideLdr(){ document.getElementById('ldr').style.display='none'; }
+function setMsg(msg){ document.getElementById('ldr-msg').textContent=msg; }
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER PRINCIPAL
+// ══════════════════════════════════════════════════════════════════
+function renderTudo() {
+  hideLdr();
+  document.getElementById('painel').style.display='block';
+  document.getElementById('recfg').style.display='block';
+
+  // Header KPIs
+  document.getElementById('hk-rec').textContent = brl(D.rec_total);
+  document.getElementById('hk-res').textContent = brl(D.res_acum);
+  document.getElementById('hk-cx').textContent  = brl(D.caixa_atual);
+  document.getElementById('hk-cg').textContent  = brl(D.cap_giro);
+  document.getElementById('upd').textContent    = 'Atualizado às '+now();
+
+  // Barra de meses
+  renderMesBar();
+
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.onclick=()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      ABA_ATIVA = btn.dataset.t;
+      renderMain();
+    };
+  });
+
+  renderMain();
+}
+
+function renderMesBar() {
+  const bar = document.getElementById('mes-bar');
+  const meses_com_dados = D.rec_mes.map((v,i)=>({i,v,res:D.res_mes[i]}));
+
+  let html = `<span style="font-size:10px;color:var(--xsoft);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;margin-right:4px">Mês:</span>`;
+  html += `<button class="mes-btn${MES_ATIVO===-1?' active':''}" onclick="setMes(-1)">Todos</button>`;
+
+  MESES_AB.forEach((m,i)=>{
+    const temDados = D.rec_mes[i]>0 || D.saida_mes[i]>0;
+    const noVerm  = D.res_mes[i]<0 && temDados;
+    const cls = MES_ATIVO===i?' active':noVerm?' vermelho':temDados?' tem-dados':'';
+    html += `<button class="mes-btn${cls}" onclick="setMes(${i})">${m}</button>`;
+  });
+
+  bar.innerHTML = html;
+}
+
+function setMes(i) {
+  MES_ATIVO = i;
+  renderMesBar();
+  renderMain();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER POR ABA
+// ══════════════════════════════════════════════════════════════════
+function renderMain() {
+  const mc = document.getElementById('main');
+  mc.innerHTML = '';
+
+  if (ABA_ATIVA === 'geral') renderGeral(mc);
+  else if (ABA_ATIVA === 'dd') renderNegocio(mc, 'dd');
+  else if (ABA_ATIVA === 'ptl') renderNegocio(mc, 'ptl');
+  else if (ABA_ATIVA === 'emb') renderNegocio(mc, 'emb');
+}
+
+// ── ABA GERAL ─────────────────────────────────────────────────────
+function renderGeral(mc) {
+  const d = D;
+  const mi = MES_ATIVO; // -1 = todos
+  const isTodos = mi === -1;
+
+  // Valores do mês ou acumulado
+  const rec    = isTodos ? d.rec_total       : d.rec_mes[mi];
+  const saida  = isTodos ? d.saida_total     : d.saida_mes[mi];
+  const res    = isTodos ? d.res_total       : d.res_mes[mi];
+  const caixa  = isTodos ? d.caixa_atual     : d.caixa_mes[mi];
+  const meta   = isTodos ? d.meta_atual * 12 : d.meta_mes[mi];
+  const periodo = isTodos ? 'Jan–Dez 2026' : MESES_FULL[mi];
+
+  // ALERTAS
+  if (d.alertas.length > 0) {
+    d.alertas.forEach((a,i)=>{
+      mc.innerHTML += `<div class="alert-banner ${a.tipo} anim" style="animation-delay:${i*0.04}s">
+        <div class="ab-icon">${a.icon}</div>
+        <div><div class="ab-title" style="color:var(--${a.tipo})">${a.titulo}</div>
+        <div class="ab-text">${a.texto}</div></div>
+      </div>`;
+    });
+  }
+
+  // KPI GRID
+  const semRes = res>=0
+    ? `<span style="background:var(--pos-bg);color:var(--pos)" class="badge pos">● No azul</span>`
+    : `<span class="badge neg">● No vermelho</span>`;
+
+  const runway = d.cfixo_mensal > 0 ? (d.caixa_atual/d.cfixo_mensal).toFixed(1) : '—';
+  const cgOk = d.caixa_atual >= d.cap_giro;
+
+  mc.innerHTML += `
+  <div class="stitle">Visão geral · ${periodo}</div>
+  <div class="kpi-grid anim d1">
+    <div class="kpi-mini">
+      <div class="km-l">Receita</div>
+      <div class="km-v ${rec>0?'pos':''}">${brl0(rec)}</div>
+      <div class="km-s">${isTodos?'acumulado no ano':'receitas no mês'}</div>
+    </div>
+    <div class="kpi-mini">
+      <div class="km-l">Total saídas</div>
+      <div class="km-v neg">${brl0(saida)}</div>
+      <div class="km-s">fixos + variáveis</div>
+    </div>
+    <div class="kpi-mini">
+      <div class="km-l">Resultado líquido</div>
+      <div class="km-v ${res>=0?'pos':'neg'}">${brl(res,'R$ -')}</div>
+      <div class="km-s">${semRes}</div>
+    </div>
+    <div class="kpi-mini">
+      <div class="km-l">Caixa / Saldo</div>
+      <div class="km-v ${caixa>=0?'':'neg'}">${brl0(caixa)}</div>
+      <div class="km-s">~${runway} meses de runway</div>
+    </div>
+    <div class="kpi-mini">
+      <div class="km-l">Meta ${isTodos?'anual':'do mês'}</div>
+      <div class="km-v warn">${brl0(meta)}</div>
+      <div class="km-s">${pct(isTodos?rec/(meta||1):(mi>=0?d.pct_meta[mi]:0))} atingido</div>
+    </div>
+    <div class="kpi-mini">
+      <div class="km-l">Capital de giro</div>
+      <div class="km-v ${cgOk?'pos':'neg'}">${brl0(d.cap_giro)}</div>
+      <div class="km-s">${cgOk?'✓ Caixa suficiente':'⚠️ Caixa insuficiente'}</div>
+    </div>
+    <div class="kpi-mini">
+      <div class="km-l">Margem operacional</div>
+      <div class="km-v ${(isTodos?res/rec:d.margem_mes[mi]||0)>=0.1?'pos':'neg'}">${pct(isTodos?res/(rec||1):d.margem_mes[mi]||0,'—')}</div>
+      <div class="km-s">receita líq. / receita bruta</div>
+    </div>
+    <div class="kpi-mini">
+      <div class="km-l">Saldo acumulado</div>
+      <div class="km-v ${d.res_acum>=0?'pos':'neg'}">${brl(d.res_acum,'R$ -')}</div>
+      <div class="km-s">resultado acum. no ano</div>
+    </div>
+  </div>`;
+
+  // GRÁFICO + RECEITA POR NEGÓCIO
+  const maxV = Math.max(...d.rec_mes,...d.saida_mes,d.meta_atual||0,1);
+  const H=75;
+  const barrasHTML = MESES_AB.map((m,i)=>{
+    const rv = d.rec_mes[i], sv = d.saida_mes[i];
+    const rh = rv>0?Math.max((rv/maxV)*H,3):0;
+    const sh = sv>0?Math.max((sv/maxV)*H,3):0;
+    const noVerm = rv<sv && (rv>0||sv>0);
+    const rcor = noVerm?'var(--neg)':'var(--pos)';
+    const isNow = i===2;
+    const isActive = mi===i;
+    return `<div class="c-col tt" onclick="setMes(${i===mi?-1:i})" style="cursor:pointer">
+      <div class="tt-tip">${MESES_FULL[i]}: Rec ${brl0(rv)} · Saída ${brl0(sv)}</div>
+      <div style="flex:1;display:flex;align-items:flex-end;width:100%;gap:1px">
+        <div class="c-bar" style="height:${rh}px;background:${rcor};flex:1;${isActive?'opacity:1':''}"></div>
+        <div class="c-bar" style="height:${sh}px;background:var(--xsoft);flex:1;opacity:.5"></div>
+      </div>
+      <div class="c-lbl${isNow?' now':''}${isActive?' active-m':''}">${m}</div>
+    </div>`;
+  }).join('');
+  const metaH = ((d.meta_atual||0)/maxV)*H;
+
+  const tot = d.rec_total||1;
+  mc.innerHTML += `
+  <div class="row anim d2">
+    <div class="card w2">
+      <div class="card-lbl">Receita × Saídas mensais <span style="font-size:9px;color:var(--xsoft)">(clique no mês para filtrar)</span></div>
+      <div style="display:flex;gap:10px;font-size:10px;color:var(--soft);margin-bottom:4px">
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--pos);border-radius:1px;display:inline-block"></span>Receita</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:var(--xsoft);border-radius:1px;display:inline-block;opacity:.5"></span>Saídas</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="border-top:1px dashed var(--xsoft);width:12px;display:inline-block"></span>Meta</span>
+      </div>
+      <div class="chart-wrap">
+        ${barrasHTML}
+        <div class="meta-ln" style="bottom:${metaH+18}px"><span class="meta-tg">meta</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-lbl">Receita por negócio ${isTodos?'(ano)':'('+MESES_AB[mi]+')'}</div>
+      ${negRow('Destinos Delas','Expedições','var(--dd)',isTodos?d.dd_total:d.dd_mes[mi],tot)}
+      ${negRow('Paty Te Leva','Comissões e taxas','var(--ptl)',isTodos?d.ptl_total:d.ptl_mes[mi],tot)}
+      ${negRow('Embarque+','Assinaturas + comissões','var(--emb)',isTodos?d.emb_total:d.emb_mes[mi],tot)}
+    </div>
+  </div>`;
+
+  // DRE COMPLETO
+  mc.innerHTML += `<div class="stitle">DRE · Demonstrativo de Resultado ${isTodos?'(Ano 2026)':'('+MESES_FULL[mi]+')'}</div>`;
+
+  const dreRows = buildDRE(isTodos, mi);
+  mc.innerHTML += `<div class="card anim d3"><table class="dre">${dreRows}</table></div>`;
+
+  // EXPEDIÇÕES
+  mc.innerHTML += `<div class="stitle">Destinos Delas · Expedições 2026</div>`;
+  mc.innerHTML += `<div class="card anim d4">${buildExpTable()}</div>`;
+
+  // INSIGHTS + CUSTOS FIXOS
+  mc.innerHTML += `
+  <div class="row anim d5">
+    <div class="card">
+      <div class="card-lbl">Custos fixos mensais (PJ)</div>
+      ${d.custos_fixos_detalhe.map(c=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="color:var(--soft)">${c.n}</span><span style="font-weight:500">${brl0(c.v)}</span>
+      </div>`).join('')}
+      <div style="display:flex;justify-content:space-between;padding:9px 0 0;font-size:13px;font-weight:600;border-top:2px solid var(--border);margin-top:4px">
+        <span>Total fixo/mês</span><span style="color:var(--neg)">${brl0(d.cfixo_mensal)}</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-lbl">Capital de giro</div>
+      <div class="big ${d.caixa_atual>=d.cap_giro?'pos':'neg'}">${brl0(d.caixa_atual)}</div>
+      <div class="csub">caixa disponível</div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">
+          <span style="color:var(--soft)">Mínimo recomendado (3 meses)</span>
+          <span style="font-weight:600">${brl0(d.cap_giro)}</span>
+        </div>
+        <div style="height:6px;background:var(--surf2);border-radius:3px;overflow:hidden;margin-bottom:6px">
+          <div style="height:100%;border-radius:3px;background:${d.caixa_atual>=d.cap_giro?'var(--pos)':'var(--neg)'};width:${Math.min(d.caixa_atual/d.cap_giro*100,100).toFixed(0)}%;transition:width .5s"></div>
+        </div>
+        <div style="font-size:11px;color:${d.caixa_atual>=d.cap_giro?'var(--pos)':'var(--neg)'}">
+          ${d.caixa_atual>=d.cap_giro?'✓ Caixa acima do mínimo recomendado':'⚠️ Caixa abaixo do capital de giro necessário'}
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-lbl">Insights estratégicos</div>
+      ${buildInsights()}
+    </div>
+  </div>`;
+
+  // POTENCIAL
+  mc.innerHTML += `
+  <div class="row anim d6">
+    <div class="card pot-card">
+      <div class="card-lbl">Potencial de receita 2026</div>
+      <div class="big">R$ 500k+</div>
+      <div class="csub" style="margin-bottom:12px">se todas as vagas forem vendidas</div>
+      <div class="pot-row"><span class="pot-l">⭐ EuroTrip (14 vagas × R$24.500)</span><span class="pot-v">R$ 343.000</span></div>
+      <div class="pot-row"><span class="pot-l">Buenos Aires 2ª (6 vagas × R$4.550)</span><span class="pot-v">R$ 27.300</span></div>
+      <div class="pot-row"><span class="pot-l">Chapada 3ª (7 vagas restantes × R$2.800)</span><span class="pot-v">R$ 19.600</span></div>
+      <div class="pot-row"><span class="pot-l">Lençóis, Jalapão, Amazônia, Chapada 4ª</span><span class="pot-v">R$ 90k+</span></div>
+      <div class="pot-row"><span class="pot-l">Paty Te Leva (comissões)</span><span class="pot-v">a projetar</span></div>
+      <div class="pot-row"><span class="pot-l">Embarque+ (assinaturas)</span><span class="pot-v">recorrente</span></div>
+      <div style="border-top:1px solid rgba(255,255,255,.12);margin-top:8px;padding-top:10px;display:flex;justify-content:space-between;font-size:13px">
+        <span style="color:rgba(255,255,255,.6);font-weight:600">Já realizado</span>
+        <span style="color:#A8C4B0;font-weight:600">${brl(d.rec_total)}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── ABA NEGÓCIO ──────────────────────────────────────────────────
+function renderNegocio(mc, neg) {
+  const d = D;
+  const mi = MES_ATIVO;
+  const isTodos = mi === -1;
+
+  const cfg = {
+    dd:  {nome:'Destinos Delas', cor:'var(--dd)', bg:'var(--dd-bg)', rec_mes:d.dd_mes, desc:'Expedições femininas em grupo'},
+    ptl: {nome:'Paty Te Leva',   cor:'var(--ptl)',bg:'var(--ptl-bg)',rec_mes:d.ptl_mes,desc:'Agência de viagens — comissões e taxas'},
+    emb: {nome:'Embarque+',      cor:'var(--emb)',bg:'var(--emb-bg)',rec_mes:d.emb_mes,desc:'Comunidade de alertas de passagens'},
+  }[neg];
+
+  const rec   = isTodos ? cfg.rec_mes.reduce((a,b)=>a+b,0) : cfg.rec_mes[mi];
+  const saida = isTodos ? d.saida_mes.reduce((a,b)=>a+b,0) : d.saida_mes[mi];
+  const res   = rec - saida;
+
+  mc.innerHTML += `
+  <div class="stitle" style="border-bottom-color:${cfg.cor}">${cfg.nome} · ${cfg.desc} · ${isTodos?'Ano 2026':MESES_FULL[mi]}</div>
+
+  <div class="row anim d1">
+    <div class="kpi-mini card">
+      <div class="km-l">Receita ${isTodos?'anual':'do mês'}</div>
+      <div class="km-v" style="color:${cfg.cor}">${brl0(rec)}</div>
+      <div class="km-s">${isTodos?'total acumulado':'receitas no período'}</div>
+    </div>
+    <div class="kpi-mini card">
+      <div class="km-l">Saídas alocadas</div>
+      <div class="km-v neg">${brl0(saida)}</div>
+      <div class="km-s">custos atribuídos ao negócio</div>
+    </div>
+    <div class="kpi-mini card">
+      <div class="km-l">Resultado líquido</div>
+      <div class="km-v ${res>=0?'pos':'neg'}">${brl(res,'R$ -')}</div>
+      <div class="km-s">${res>=0?'✓ No azul':'⚠️ No vermelho'}</div>
+    </div>
+    <div class="kpi-mini card">
+      <div class="km-l">Margem</div>
+      <div class="km-v ${rec>0&&res/rec>0.1?'pos':'neg'}">${pct(rec>0?res/rec:0)}</div>
+      <div class="km-s">resultado / receita</div>
+    </div>
+  </div>`;
+
+  // DRE do negócio
+  mc.innerHTML += `<div class="stitle">DRE · ${cfg.nome} · ${isTodos?'Ano 2026':MESES_FULL[mi]}</div>`;
+  mc.innerHTML += `<div class="card anim d2"><table class="dre">${buildDRE(isTodos, mi, neg)}</table></div>`;
+
+  // Seção específica por negócio
+  if (neg === 'dd') {
+    mc.innerHTML += `<div class="stitle">Expedições · status de vendas</div>`;
+    mc.innerHTML += `<div class="card anim d3">${buildExpTable()}</div>`;
+  } else if (neg === 'ptl') {
+    mc.innerHTML += `
+    <div class="card anim d3">
+      <div class="card-lbl">Categorias de receita · Paty Te Leva</div>
+      <table class="dre">
+        <tr class="section-row"><td colspan="2">Fontes de receita</td></tr>
+        <tr><td class="indent">Passagens por milhas (taxa de serviço)</td><td class="${valCls(0)}">${brl0(0)}</td></tr>
+        <tr><td class="indent">Passagens aéreas (comissão operadora)</td><td class="${valCls(0)}">${brl0(0)}</td></tr>
+        <tr><td class="indent">Hospedagens (comissão)</td><td class="${valCls(0)}">${brl0(0)}</td></tr>
+        <tr><td class="indent">Pacotes completos (margem)</td><td class="${valCls(0)}">${brl0(0)}</td></tr>
+        <tr><td class="indent">Seguros viagem (comissão)</td><td class="${valCls(0)}">${brl0(0)}</td></tr>
+        <tr><td class="indent">Aluguel, chip, ingressos</td><td class="${valCls(0)}">${brl0(0)}</td></tr>
+        <tr class="subtotal-row"><td>Total Paty Te Leva</td><td>${brl0(isTodos?d.ptl_total:d.ptl_mes[mi])}</td></tr>
+      </table>
+      <div style="margin-top:12px;padding:10px;background:var(--ptl-bg);border-radius:6px;font-size:12px;color:var(--soft);line-height:1.6">
+        💡 <strong style="color:var(--text)">Lembre-se:</strong> registre apenas o valor que fica com você (comissão ou taxa), não o valor total pago pelo cliente.
+      </div>
+    </div>`;
+  } else if (neg === 'emb') {
+    const asn_total = isTodos ? d.emb_asn_mes.reduce((a,b)=>a+b,0) : d.emb_asn_mes[mi];
+    const com_total = isTodos ? d.emb_com_mes.reduce((a,b)=>a+b,0) : d.emb_com_mes[mi];
+    mc.innerHTML += `
+    <div class="card anim d3">
+      <div class="card-lbl">Receita Embarque+ detalhada</div>
+      <table class="dre">
+        <tr class="section-row"><td colspan="2">Fontes de receita</td></tr>
+        <tr><td class="indent">Assinaturas (Semestral R$97 · Anual R$397)</td><td class="${valCls(asn_total)}">${brl0(asn_total)}</td></tr>
+        <tr><td class="indent">Comissões de passagens indicadas</td><td class="${valCls(com_total)}">${brl0(com_total)}</td></tr>
+        <tr class="subtotal-row"><td>Total Embarque+</td><td>${brl0(asn_total+com_total)}</td></tr>
+      </table>
+      <div style="margin-top:12px;padding:10px;background:var(--emb-bg);border-radius:6px;font-size:12px;color:var(--soft);line-height:1.6">
+        📈 Embarque+ é a única receita previsível e recorrente do negócio. Cada nova assinatura anual = R$397 à vista.
+      </div>
+    </div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// BUILDERS
+// ══════════════════════════════════════════════════════════════════
+function buildDRE(isTodos, mi, neg=null) {
+  const d = D;
+  const v = (arr) => isTodos ? arr.reduce((a,b)=>a+b,0) : (arr[mi]||0);
+
+  const rec_dd  = v(d.dd_mes);
+  const rec_ptl = v(d.ptl_mes);
+  const rec_emb = v(d.emb_mes);
+  const rec_tot = v(d.rec_mes);
+
+  const repasse = v(d.repasse_mes);
+  const brindes = v(d.brindes_mes);
+  const despvg  = v(d.despvg_mes);
+  const outras  = v(d.outras_mes);
+  const cfixos  = v(d.cfixos_mes);
+  const cvars   = v(d.cv_mes);
+  const inv     = v(d.ci_mes);
+  const saida   = v(d.saida_mes);
+  const res     = v(d.res_mes);
+  const caixa   = isTodos ? d.caixa_atual : d.caixa_mes[mi];
+
+  const row = (label, val, indent=false, cls='') => {
+    const vc = valCls(val);
+    return `<tr${cls?' class="'+cls+'"':''}>
+      <td${indent?' class="indent"':''}>${label}</td>
+      <td class="${vc}">${brl0(val)}</td>
+    </tr>`;
+  };
+
+  let html = `<tr><th style="text-align:left">Categoria</th><th>Valor (R$)</th></tr>`;
+
+  html += `<tr class="section-row"><td colspan="2">▸ ENTRADAS</td></tr>`;
+  if (!neg || neg==='dd')  html += row('Destinos Delas — Expedições', rec_dd, true);
+  if (!neg || neg==='ptl') html += row('Paty Te Leva — Comissões/Taxas', rec_ptl, true);
+  if (!neg || neg==='emb') html += row('Embarque+ — Assinaturas', v(d.emb_asn_mes), true);
+  if (!neg || neg==='emb') html += row('Embarque+ — Comissões passagens', v(d.emb_com_mes), true);
+  html += `<tr class="total-row"><td>TOTAL RECEITAS</td><td>${brl0(rec_tot)}</td></tr>`;
+
+  html += `<tr class="section-row"><td colspan="2">▸ CUSTOS VARIÁVEIS</td></tr>`;
+  html += row('Repasse a fornecedores', -repasse, true);
+  html += row('Brindes e kits das expedições', -brindes, true);
+  html += row('Despesa de viagem (líder)', -despvg, true);
+  html += row('Cartão de crédito / outros variáveis', -outras, true);
+  html += row('Subtotal custos variáveis', -(repasse+brindes+despvg+outras), false, 'subtotal-row');
+
+  html += `<tr class="section-row"><td colspan="2">▸ CUSTOS FIXOS & ADMINISTRATIVOS</td></tr>`;
+  html += row('Imposto, contabilidade, ferramentas, etc.', -cfixos, true);
+  html += row('Subtotal custos fixos', -cfixos, false, 'subtotal-row');
+
+  if (inv > 0) {
+    html += `<tr class="section-row"><td colspan="2">▸ INVESTIMENTOS</td></tr>`;
+    html += row('Treinamentos e capacitação', -inv, true);
+  }
+
+  html += `<tr class="section-row"><td colspan="2">▸ RESULTADO</td></tr>`;
+  html += `<tr class="result-row ${res>=0?'pos':'neg'}">
+    <td>RESULTADO LÍQUIDO (Receitas − Saídas)</td>
+    <td class="${valCls(res)}" style="font-size:14px;font-weight:700">${brl(res,'R$ -')}</td>
+  </tr>`;
+
+  if (!isTodos && mi > 0) {
+    const saldo_ant = d.caixa_mes[mi-1] || 0;
+    html += `<tr class="section-row"><td colspan="2">▸ CAIXA</td></tr>`;
+    html += row('Saldo anterior ('+MESES_FULL[mi-1]+')', saldo_ant, true);
+    html += row('Resultado do mês', res, true);
+    html += `<tr class="caixa-row"><td>SALDO FINAL (Caixa do mês)</td><td style="font-weight:700">${brl0(caixa)}</td></tr>`;
+  } else if (isTodos) {
+    html += `<tr class="section-row"><td colspan="2">▸ CAIXA</td></tr>`;
+    html += `<tr class="caixa-row"><td>SALDO ACUMULADO NO ANO</td><td style="font-weight:700">${brl0(d.res_acum)}</td></tr>`;
+  }
+
+  return html;
+}
+
+function buildExpTable() {
+  const ssMap = {
+    'Fechada ✓':{bg:'var(--pos-bg)',c:'var(--pos)'},
+    'Aberta':   {bg:'var(--warn-bg)',c:'var(--warn)'},
+    'Aberta 🔥':{bg:'var(--dd-bg)', c:'var(--dd)'},
+    'Planejada':{bg:'var(--surf2)', c:'var(--soft)'},
+  };
+  const rows = D.expedicoes.map(e=>{
+    const ocup = e.vt>0?e.vv/e.vt:0;
+    const isEuro = e.nome.includes('Euro');
+    const ss = ssMap[e.status]||{bg:'var(--surf2)',c:'var(--soft)'};
+    const pc = ocup>=1?'var(--pos)':ocup>0?'var(--warn)':'var(--border)';
+    return `<tr${isEuro?' class="hl"':''}>
+      <td>
+        <div class="exp-nome"${isEuro?' style="color:var(--dd);font-weight:600"':''}>${e.nome}</div>
+        <div class="exp-sub">${e.mes}</div>
+      </td>
+      <td>
+        <div class="prog-bg"><div class="prog-f" style="width:${(ocup*100).toFixed(0)}%;background:${pc}"></div></div>
+        <div class="prog-t">${e.vv}/${e.vt} vagas · ${pct(ocup,'0%')}</div>
+      </td>
+      <td class="ev">${brl0(e.vendido)}<small>de ${brl0(e.previsto)}</small></td>
+      <td class="ev" style="text-align:right">${brl0(e.custo)}</td>
+      <td class="ev" style="text-align:center">${e.margem>0?pct(e.margem):'—'}</td>
+      <td style="text-align:right"><span class="sbadge" style="background:${ss.bg};color:${ss.c}">${e.status}</span></td>
+    </tr>`;
+  }).join('');
+  return `<table class="exp-tbl">
+    <thead><tr>
+      <th>Destino</th><th>Ocupação</th>
+      <th class="r">Faturamento</th><th class="r">Custo</th>
+      <th class="c">Margem</th><th class="r">Status</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function buildInsights() {
+  const d = D;
+  const runway = d.cfixo_mensal>0?(d.caixa_atual/d.cfixo_mensal).toFixed(1):'?';
+  const insights = [
+    {cor:'var(--dd)',   tag:'Destinos Delas', txt:`<strong>EuroTrip é a viagem do ano.</strong> 14 vagas × R$24.500 = R$343k potencial. Fechar metade já garante a saúde financeira anual.`},
+    {cor:'var(--warn)', tag:'Caixa',          txt:`<strong>Runway de ~${runway} meses</strong> com o caixa atual. Capital de giro mínimo recomendado: ${brl(d.cap_giro)}.`},
+    {cor:'var(--ptl)',  tag:'Paty Te Leva',   txt:`<strong>Nenhuma receita lançada.</strong> Cada seguro viagem da Chapada é comissão PTL. Oportunidade imediata de cruzar receitas.`},
+    {cor:'var(--emb)',  tag:'Embarque+',       txt:`<strong>Única receita previsível.</strong> Crescer a base de assinantes reduz dependência das expedições sazonais.`},
+  ];
+  return insights.map(i=>`
+    <div class="ins-item">
+      <div class="ins-bar" style="background:${i.cor}"></div>
+      <div><div class="ins-tag" style="color:${i.cor}">${i.tag}</div>
+      <div class="ins-txt">${i.txt}</div></div>
+    </div>`).join('');
+}
+
+function negRow(label, desc, cor, val, tot) {
+  const p = tot>0?val/tot:0;
+  return `<div class="neg-row">
+    <div style="flex:1">
+      <div class="neg-nm"><span style="width:7px;height:7px;border-radius:50%;background:${cor};display:inline-block"></span>${label}</div>
+      <div class="neg-ds">${desc}</div>
+    </div>
+    <div class="neg-pb">
+      <div class="neg-pbg"><div class="neg-pf" style="width:${(Math.min(p,1)*100).toFixed(0)}%;background:${cor}"></div></div>
+      <div class="neg-pp">${val>0?pct(p):'—'}</div>
+    </div>
+    <div class="neg-vl" style="color:${val>0?cor:'var(--xsoft)'}">
+      ${brl(val,'R$ —')}
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// DEMO DATA
+// ══════════════════════════════════════════════════════════════════
+function gerarDemo() {
+  const rec_mes   = [12979,7443,0,0,0,0,0,0,0,0,0,0];
+  const saida_mes = [10639,14566,2320,2320,2320,2320,1320,1320,1320,1320,1320,1320];
+  const res_mes   = rec_mes.map((v,i)=>v-saida_mes[i]);
+  const acum_mes  = res_mes.reduce((acc,v,i)=>{acc.push((acc[i-1]||0)+v);return acc;},[]);
+  const caixa_mes = acum_mes;
+  const meta_mes  = Array(12).fill(16700);
+  const dd_mes    = [8835,7443,0,0,0,0,0,0,0,0,0,0];
+  const ptl_mes   = Array(12).fill(0);
+  const emb_asn   = [300,350,0,0,0,0,0,0,0,0,0,0];
+  const emb_com   = [0,122.8,0,0,0,0,0,0,0,0,0,0];
+  const emb_mes   = emb_asn.map((v,i)=>v+emb_com[i]);
+  const repasse   = [3679,7425,0,0,0,0,0,0,0,0,0,0];
+  const brindes   = [658.54,0,0,0,0,0,0,0,0,0,0,0];
+  const despvg    = [0,2351.8,0,0,0,0,0,0,0,0,0,0];
+  const outras    = [2658,1966,224,224,224,0,0,0,0,0,0,0];
+  const cfixos    = [3259,2630,2320,2320,2320,2320,1320,1320,1320,1320,1320,1320];
+  const cv_mes    = outras;
+  const ci_mes    = [384,192,192,192,192,192,0,0,0,0,0,0];
+  const margem    = rec_mes.map((v,i)=>v>0?res_mes[i]/v:0);
+
+  const caixa_atual = [...caixa_mes].reverse().find(v=>v!==0)||0;
+  const res_acum    = caixa_atual;
+  const cfixo_mensal= 2320;
+
+  return {
+    rec_mes,saida_mes,res_mes,acum_mes,caixa_mes,meta_mes,
+    repasse_mes:repasse,brindes_mes:brindes,despvg_mes:despvg,outras_mes:outras,
+    cfixos_mes:cfixos,cv_mes,ci_mes,margem_mes:margem,
+    dd_mes,ptl_mes,emb_asn_mes:emb_asn,emb_com_mes:emb_com,emb_mes,
+    rec_total:rec_mes.reduce((a,b)=>a+b,0),
+    dd_total:dd_mes.reduce((a,b)=>a+b,0),
+    ptl_total:0,emb_total:emb_mes.reduce((a,b)=>a+b,0),
+    saida_total:saida_mes.reduce((a,b)=>a+b,0),
+    res_total:res_mes.reduce((a,b)=>a+b,0),
+    caixa_atual,res_acum,meta_atual:16700,cfixo_mensal,
+    cap_giro:cfixo_mensal*3,
+    pct_meta:rec_mes.map((v,i)=>meta_mes[i]>0?v/meta_mes[i]:0),
+    expedicoes:[
+      {nome:'Itacaré',mes:'Fev',vt:7,vv:7,ticket:2270,previsto:15890,vendido:15353,custo:12517,margem:0.185,status:'Fechada ✓'},
+      {nome:'Chapada dos Veadeiros 3ª',mes:'Abr',vt:10,vv:3,ticket:2800,previsto:28000,vendido:8400,custo:0,margem:0,status:'Aberta'},
+      {nome:'Jalapão',mes:'Mai',vt:7,vv:0,ticket:0,previsto:0,vendido:0,custo:0,margem:0,status:'Planejada'},
+      {nome:'Lençóis Maranhenses',mes:'Jul',vt:8,vv:0,ticket:0,previsto:0,vendido:0,custo:0,margem:0,status:'Planejada'},
+      {nome:'Ilhabela',mes:'Ago',vt:7,vv:0,ticket:0,previsto:0,vendido:0,custo:0,margem:0,status:'Planejada'},
+      {nome:'Buenos Aires 2ª',mes:'Ago',vt:6,vv:0,ticket:4550,previsto:27300,vendido:0,custo:0,margem:0,status:'Aberta'},
+      {nome:'⭐ EuroTrip',mes:'Set',vt:14,vv:0,ticket:24500,previsto:343000,vendido:0,custo:0,margem:0,status:'Aberta 🔥'},
+      {nome:'Amazônia',mes:'Out',vt:7,vv:0,ticket:0,previsto:0,vendido:0,custo:0,margem:0,status:'Planejada'},
+      {nome:'Chapada 4ª',mes:'Nov',vt:10,vv:0,ticket:0,previsto:0,vendido:0,custo:0,margem:0,status:'Planejada'},
+    ],
+    alertas:[
+      {tipo:'neg',icon:'🔴',titulo:'Fevereiro no vermelho',texto:'Resultado de <strong>(R$ 7.123)</strong>. Saídas altas com repasse Itacaré + despesa de viagem da líder.'},
+      {tipo:'warn',icon:'⚠️',titulo:'Caixa abaixo do capital de giro',texto:'Caixa de <strong>R$ 4.783</strong> está abaixo do recomendado de <strong>R$ 6.960</strong> (3 meses de custos fixos).'},
+      {tipo:'warn',icon:'⭐',titulo:'EuroTrip sem vendas',texto:'A maior expedição do ano (R$343k potencial) ainda não tem nenhuma vaga vendida. Foco máximo em março.'},
+    ],
+    custos_fixos_detalhe:[
+      {n:'Imposto (até jun)',val:1000},{n:'Telefone & internet',val:350},
+      {n:'Empréstimo',val:505},{n:'Contabilidade',val:200},
+      {n:'Ferramentas',val:190},{n:'Endereço fiscal',val:75},
+    ]
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  const saved = localStorage.getItem('psgestao_sid');
+  if (saved) document.getElementById('inp-id').value = saved;
+  else document.getElementById('inp-id').value = '1hoBLtKJlN3MtY5DB8zgTdDgS_wlPliXSTySWf7AvteA';
+});
+</script>
+</body>
+</html>
